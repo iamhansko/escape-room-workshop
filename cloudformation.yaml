@@ -4,10 +4,11 @@ Parameters:
     Default: /aws/service/ami-amazon-linux-latest/al2023-ami-kernel-6.1-x86_64
   GameSourceUrl:
     Type: String
-    Default: "https://github.com/iamhansko/escape-room-workshop/releases/download/latest/game.zip"
+    Default: "https://github.com/iamhansko/escape-room-workshop/releases/download/test/game.zip"
   GamePassword:
     Type: String
-    Default: "123"
+    Default: "988"
+    NoEcho: True
 Resources:
   S3Bucket:
     Type: AWS::S3::Bucket
@@ -195,12 +196,37 @@ Resources:
                     Body=file_data,
                     ContentType=TYPE_MAP[file_name.split(".")[-1]]
                   )
-              lambda_json = "{\"url\" : \"${LambdaFunctionUrl.FunctionUrl}\"}"
               s3.put_object(
                 Bucket=S3_BUCKET,
                 Key="data/lambda.json",
-                Body=lambda_json,
+                Body="{\"url\" : \"${LambdaFunctionUrl.FunctionUrl}\"}",
                 ContentType="application/json"
+              )
+              hint_image = requests.get("https://github.com/iamhansko/escape-room-workshop/raw/refs/heads/main/img/hint1.png")
+              hint_image.raise_for_status()
+              s3.put_object(
+                Bucket=S3_BUCKET,
+                Key="hints/hint1.png",
+                Body=hint_image.content,
+                ContentType="image/png"
+              )
+              s3.put_object(
+                Bucket=S3_BUCKET,
+                Key="hints/hint2.txt",
+                Body="교실에 꽃 한 송이가 숨겨져 있다.\n\n비밀번호의 1번째 자리는\n\n빨강꽃이라면 2\n파랑꽃이라면 9\n노랑꽃이라면 3\n분홍꽃이라면 4",
+                ContentType="text/plain; charset=utf-8"
+              )
+              s3.put_object(
+                Bucket=S3_BUCKET,
+                Key="hints/hint3.txt",
+                Body="비밀번호는 총 3자리이다.\n2번째 자리는 8이다.",
+                ContentType="text/plain; charset=utf-8"
+              )
+              s3.put_object(
+                Bucket=S3_BUCKET,
+                Key="hints/hint4.txt",
+                Body="비밀번호의 마지막 자리는\n정육면체의 [꼭짓점 수]와 동일한 숫자이다.",
+                ContentType="text/plain; charset=utf-8"
               )
             except Exception as e:
               print(e)' > index.py
